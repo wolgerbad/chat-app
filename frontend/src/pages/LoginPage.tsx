@@ -14,12 +14,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const {
-    data,
-    isPending,
-    mutate: onLogin,
-    error: loginError,
-  } = useMutation({
+  const { mutate: onLogin } = useMutation({
     mutationFn: async () => await handleLogin({ email, password }),
     onSuccess: (data) => {
       setError('');
@@ -42,7 +37,7 @@ export default function LoginPage() {
       </h1>
       <form
         className="flex flex-col gap-2"
-        action={async () => await onLogin({ email, password })}
+        action={async () => await onLogin()}
       >
         <div>
           <label className="block">Email:</label>

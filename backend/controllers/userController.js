@@ -67,3 +67,10 @@ export async function updateUser(req, res, next) {
   console.log('user', user);
   res.json(user);
 }
+
+export async function findUsers(req, res, next) {
+  const val = req.params.val;
+  const users = await User.find({ name: { $regex: val, $options: 'i' } });
+
+  res.json(users);
+}

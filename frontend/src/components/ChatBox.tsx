@@ -1,20 +1,16 @@
 'use client';
 import { IoSend } from 'react-icons/io5';
 import { useConversation } from '../store/useConversation';
-import { QueryClient, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMessages } from '../_lib/helpers';
-import { useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import FriendMessage from './FriendMessage';
 import UserMessage from './UserMessage';
 import { useAuth } from '../store/useAuth';
-import {
-  startTransition,
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-} from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { socket } from '../socket';
+import type { MessagesType, MessageType } from '../types';
+import { IoIosArrowBack } from 'react-icons/io';
 
 export default function ChatBox() {
   const [clientMessage, setClientMessage] = useState('');
@@ -39,12 +35,14 @@ export default function ChatBox() {
     e.preventDefault();
     socket.emit('message', {
       message: clientMessage,
-      senderId: user.id,
+      senderId: user?.id,
       conversationId,
     });
 
     setClientMessage('');
   }
+
+  useEffect(function () {}, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'auto' });
@@ -52,8 +50,7 @@ export default function ChatBox() {
 
   useEffect(
     function () {
-      function handleMessages(messages) {
-        console.log('socket res', messages);
+      function handleMessages(messages: MessagesType) {
         queryClient.setQueryData(['messages', conversationId], messages);
       }
 
@@ -71,23 +68,26 @@ export default function ChatBox() {
   if (isPending) return <p>loading...</p>;
 
   return (
-    <div className="col-start-2 col-span-full flex flex-col h-screen">
-      <div className="px-4 py-6 flex-1">
+    <div className="flex-1 flex flex-col h-screen">
+      <div className="px-4 py-6 flex-1 h-screen">
         <div className="flex items-center gap-2">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-gray-600 to-gray-900 text-white flex items-center justify-center text-xl font-semibold">
-            {selectedFriend.name.slice(0, 1)}
+          <Link to="/" className="text-xl font-semibold">
+            <IoIosArrowBack />
+          </Link>
+          <div className="w-12 h-12 rounded-full bg-linear-to-tr from-gray-600 to-gray-900 text-white flex items-center justify-center text-xl font-semibold">
+            {selectedFriend?.name.slice(0, 1)}
           </div>
           <div className="flex-1">
-            <h3>{selectedFriend.name}</h3>
+            <h3>{selectedFriend?.name}</h3>
           </div>
         </div>
       </div>
       <div className="flex flex-col gap-4 h-full overflow-y-scroll px-4 py-6">
-        {messages.map((message) =>
-          message.senderId === selectedFriend.id ? (
-            <FriendMessage key={message._id} message={message} />
-          ) : (
+        {messages.map((message: MessageType) =>
+          message.senderId === user?.id ? (
             <UserMessage key={message._id} message={message} user={user} />
+          ) : (
+            <FriendMessage key={message._id} message={message} />
           )
         )}
         <div ref={bottomRef} />

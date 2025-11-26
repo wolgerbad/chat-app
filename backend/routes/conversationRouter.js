@@ -11,14 +11,21 @@ router.get('/:userId', async (req, res, next) => {
   res.json(conversations);
 });
 
-router.get('/conversation/:userId', async (req, res, next) => {
-  const id = req.params.userId.split('&');
+router.get('/conversation/:conversationId', async (req, res, next) => {
+  const conversationId = req.params.conversationId;
+  const conversation = await Conversation.findOne({ _id: conversationId });
 
-  const conversations = await Conversation.find({
-    $and: [{ participants: id[0] }, { participants: id[1] }],
-  });
+  res.json(conversation);
+});
 
-  res.json(conversations);
+// res.json(conversations);
+
+router.post('/', async (req, res, next) => {
+  const participants = req.body.participants;
+
+  const newConversation = await Conversation.insertOne({ participants });
+
+  res.json(newConversation);
 });
 
 export default router;

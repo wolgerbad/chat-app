@@ -12,8 +12,24 @@ import userRouter from './routes/userRouter.js';
 import messageRouter from './routes/messageRouter.js';
 import { Message } from './models/messagesModel.js';
 import { addNewMessage, getMessages } from './controllers/messageController.js';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads/');
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + '-' + file.originalname);
+//   },
+// });
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+// const upload = multer({ storage });
 
 const app = express();
 app.use(express.json());
@@ -24,6 +40,11 @@ app.use('/api/auth', authRouter);
 app.use('/conversations', conversationRouter);
 app.use('/messages', messageRouter);
 app.use(authError);
+
+// app.post('/upload', upload.single('avatar'), (req, res, next) => {
+//   console.log('reqfile', path.join(__dirname, 'uploads', req.file.filename));
+//   res.sendFile(path.join(__dirname, 'uploads', req.file.filename));
+// });
 
 const server = http.createServer(app);
 

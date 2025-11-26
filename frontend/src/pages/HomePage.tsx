@@ -6,19 +6,24 @@ import { useAuth } from '../store/useAuth';
 import { useConversation } from '../store/useConversation';
 import Modal from '../components/Modal';
 import { useModel } from '../store/useModel';
+import { CiChat1 } from 'react-icons/ci';
+import { getConversation } from '../_lib/helpers';
+import type { UserType } from '../types';
+import { useMediaQuery } from 'usehooks-ts';
 
 export default function HomePage() {
   const [searchParams] = useSearchParams();
   const conversationId = searchParams.get('conversation');
 
   const { user } = useAuth((state) => state);
+
+  const isMedium = useMediaQuery('(min-width: 640px)');
+
   const { selectedFriend, setSelectedFriend } = useConversation(
     (state) => state
   );
   const { isOpen } = useModel((state) => state);
   const navigate = useNavigate();
-
-  console.log('selectedFriend', selectedFriend);
 
   useEffect(
     function () {
@@ -27,12 +32,53 @@ export default function HomePage() {
         navigate('/login');
       }
     },
-    [user, navigate]
+    [user, navigate, setSelectedFriend]
   );
+
+  useEffect(
+    function () {
+      async function synchronizeSelectedFriend() {
+        if (!conversationId) return;
+        const conversation = await getConversation(conversationId);
+        const friend = conversation?.participants?.filter(
+          (participant: UserType) => participant.id !== user?.id
+        );
+        if (!conversation || !friend) return;
+
+        setSelectedFriend(friend[0]);
+      }
+
+      synchronizeSelectedFriend();
+    },
+    [conversationId, setSelectedFriend, user?.id]
+  );
+
   return (
-    <div className="grid grid-cols-4">
-      {user && <Sidebar />}
-      {user && selectedFriend && <ChatBox key={conversationId} />}
+    <div className="flex h-screen overflow-hidden">
+      {isMedium ? (
+        <>
+          {user && <Sidebar />}
+
+          {user && conversationId && <ChatBox key={conversationId} />}
+          {user && !conversationId && (
+            <div className="hidden sm:flex flex-1 flex-col items-center pt-40 col-span-full bg-neutral-100 h-full text-center">
+              <CiChat1 className="text-6xl font-semibold mb-4" />
+              <h1 className="text-3xl mb-8">Welcome to Chat App</h1>
+              <p>Feel free to start conversation with anyone at anytime!</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {user && !conversationId && (
+            <div className="w-full">
+              <Sidebar />
+            </div>
+          )}
+          {user && conversationId && <ChatBox key={conversationId} />}
+        </>
+      )}
+
       {isOpen && <Modal />}
     </div>
   );

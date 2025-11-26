@@ -5,17 +5,23 @@ import { useFormStatus } from 'react-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../store/useAuth';
 import { handleSignUp } from '../_lib/helpers';
-import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
+
+type FormValues = {
+  name: string;
+  email: string;
+  password: string;
+};
 
 export default function SignupPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm<FormValues>();
 
-  const { user, setUser } = useAuth((state) => state);
+  const user = useAuth((state) => state.user);
+  const setUser = useAuth((state) => state.setUser);
   const navigate = useNavigate();
   const [error, setError] = useState('');
 
