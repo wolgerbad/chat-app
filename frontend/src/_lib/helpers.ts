@@ -40,7 +40,6 @@ export async function handleSignUp({
         'Content-Type': 'application/json',
       },
     });
-    if (!res.ok) throw new Error('Invalid credentials');
 
     const result = await res.json();
 

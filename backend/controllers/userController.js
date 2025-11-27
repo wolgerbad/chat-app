@@ -36,7 +36,11 @@ export async function signup(req, res, next) {
 
     const token = generateToken(user.id);
 
-    res.cookie('jwt', token);
+    console.log('token', token);
+
+    res.cookie('jwt', token, {
+      httpOnly: true,
+    });
 
     res.json({ id: user._id, name, email });
   } catch (err) {
