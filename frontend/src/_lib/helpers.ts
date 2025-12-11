@@ -88,12 +88,9 @@ export async function getMessages(conversationId: string) {
   return data;
 }
 
-export async function updateUsername(
-  id: string | undefined,
-  name: string | undefined
-) {
+export async function updateUser(id: string | undefined, field: object) {
   const res = await fetch(`http://localhost:4000/users/${id}`, {
-    body: JSON.stringify({ name }),
+    body: JSON.stringify(field),
     method: 'PUT',
     headers: {
       'Content-type': 'application/json',
@@ -121,15 +118,8 @@ export async function getSearchedUsers(
   return filteredUsers;
 }
 
-export async function handleNewFriend(friend: UserType, user: UserType | null) {
-  const participants = [friend, user];
-
-  const userConversations = await getConversations(user?.id);
-  const isConversationExists = userConversations.filter(
-    (conversation: ConversationType) =>
-      conversation.participants.some((p) => p.id == friend.id)
-  );
-  if (isConversationExists.length) return;
+export async function handleNewFriend(friendId: string, userId: string | null) {
+  const participants = [friendId, userId];
 
   const res = await fetch('http://localhost:4000/conversations', {
     body: JSON.stringify({ participants }),
@@ -139,4 +129,36 @@ export async function handleNewFriend(friend: UserType, user: UserType | null) {
 
   const newConversation = res.json();
   return newConversation;
+}
+
+export async function handleImageUpdate(e, user: UserType) {
+  const formData = new FormData();
+  formData.append('test', e.target.files[0]);
+  const res = await fetch('http://localhost:4000/upload', {
+    method: 'POST',
+    body: formData,
+  });
+  const image = await res.json();
+  const updatedUser = await updateUser(user?.id, { image: image.url });
+
+  return updatedUser;
+}
+
+export async function getFriendById(friendId) {
+  const res = await fetch(`http://localhost:4000/users/${friendId}`);
+  const friend = await res.json();
+  return friend;
+}
+
+export async function updateConversation(conversationId) {
+  const res = await fetch('http://localhost:4000/conversations/update', {
+    method: 'PUT',
+    body: JSON.stringify({ conversationId }),
+    headers: {
+      'Content-type': 'application/json',
+    },
+  });
+  const result = await res.json();
+
+  return result;
 }

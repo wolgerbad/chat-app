@@ -1,8 +1,13 @@
 'use client';
 import { IoSend } from 'react-icons/io5';
 import { useConversation } from '../store/useConversation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getMessages } from '../_lib/helpers';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  getConversations,
+  getFriendById,
+  getMessages,
+  updateConversation,
+} from '../_lib/helpers';
 import { Link, useSearchParams } from 'react-router';
 import FriendMessage from './FriendMessage';
 import UserMessage from './UserMessage';
@@ -20,6 +25,8 @@ export default function ChatBox() {
 
   const { user } = useAuth((state) => state);
   const { selectedFriend } = useConversation((state) => state);
+  console.log('selectedFriend', selectedFriend);
+
   const bottomRef = useRef(null);
 
   const {
@@ -31,7 +38,12 @@ export default function ChatBox() {
     queryFn: async () => await getMessages(conversationId),
   });
 
-  function handleSubmit(e: FormEvent) {
+  // const { data: conversations, isPending: isConversationsPending } = useQuery({
+  //   queryKey: ['conversations'],
+  //   queryFn: async () => await getConversations(user?.id),
+  // });
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     socket.emit('message', {
       message: clientMessage,
@@ -39,10 +51,14 @@ export default function ChatBox() {
       conversationId,
     });
 
+    const updatedConversation = await updateConversation(conversationId);
+
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+
     setClientMessage('');
   }
 
-  useEffect(function () {}, []);
+  // useEffect(function () {}, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'auto' });
@@ -74,8 +90,16 @@ export default function ChatBox() {
           <Link to="/" className="text-xl font-semibold">
             <IoIosArrowBack />
           </Link>
-          <div className="w-12 h-12 rounded-full bg-linear-to-tr from-gray-600 to-gray-900 text-white flex items-center justify-center text-xl font-semibold">
-            {selectedFriend?.name.slice(0, 1)}
+          <div className="w-12 h-12 rounded-full bg-linear-to-tr overflow-hidden from-gray-600 to-gray-900 text-white flex items-center justify-center text-xl font-semibold">
+            {selectedFriend?.image ? (
+              <img
+                src={selectedFriend.image}
+                alt={`image of ${selectedFriend.name}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              selectedFriend?.name.slice(0, 1)
+            )}
           </div>
           <div className="flex-1">
             <h3>{selectedFriend?.name}</h3>

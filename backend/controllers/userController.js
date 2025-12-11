@@ -16,7 +16,12 @@ export async function login(req, res, next) {
     res.cookie('jwt', token, {
       httpOnly: true,
     });
-    res.json({ id: user._id, name: user.name, email: user.email });
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+    });
   } catch (error) {
     next(error);
   }
@@ -58,15 +63,19 @@ export async function logout(req, res, next) {
 
 export async function getUser(req, res, next) {
   const id = req.params.id;
-  const { name, email } = await User.findById(id);
+  const { name, email, image } = await User.findById(id);
 
-  res.json({ id, name, email });
+  res.json({ id, name, email, image });
 }
 
 export async function updateUser(req, res, next) {
-  const name = req.body.name;
+  const field = req.body;
   const id = req.params.id;
-  const update = await User.updateOne({ _id: id }, { name });
+  const update = await User.findOneAndUpdate(
+    { _id: id },
+    { $set: { ...field } },
+    { upsert: true, new: true }
+  );
   const user = await User.findById(id);
   console.log('user', user);
   res.json(user);

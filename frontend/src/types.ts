@@ -2,6 +2,9 @@ export type UserType = {
   id: string;
   name: string;
   email: string;
+  image?: {
+    type: string;
+  };
 };
 
 export type ConversationStateType = {

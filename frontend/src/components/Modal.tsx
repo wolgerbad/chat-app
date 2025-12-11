@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../store/useAuth';
-import { updateUsername } from '../_lib/helpers';
+import { handleImageUpdate, updateUser } from '../_lib/helpers';
 import { useModel } from '../store/useModel';
+import { MdOutlineEdit } from 'react-icons/md';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function Modal() {
+  const queryClient = useQueryClient();
   const { user, setUser } = useAuth((state) => state);
   const { setIsOpen } = useModel((state) => state);
 
@@ -12,18 +15,40 @@ export default function Modal() {
   async function handleSave() {
     if (clientName === user?.name) return;
 
-    const updatedUser = await updateUsername(user?.id, clientName);
+    const updatedUser = await updateUser(user?.id, { name: clientName });
     const { _id: id, name, email } = updatedUser;
     setUser({ id, name, email });
     setIsOpen(false);
+  }
+
+  async function handlePost(e) {
+    const updatedUser = await handleImageUpdate(e, user);
+    setUser({ ...updatedUser, id: updatedUser._id });
+
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
   }
 
   return (
     <div className="fixed inset-0 backdrop-blur-xs backdrop-brightness-50">
       <div className="flex flex-col w-[80%] sm:w-[70%] md:w-100 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-black-500 bg-white rounded-md">
         <div className="flex flex-col items-center my-4">
-          <div className="w-16 h-16 rounded-full bg-linear-to-tr from-gray-600 to-gray-900 text-white flex items-center justify-center text-xl font-semibold">
-            {user?.name.slice(0, 1)}
+          <div className="w-16 h-16 rounded-full group bg-linear-to-tr overflow-hidden from-gray-600 to-gray-900 text-white flex items-center justify-center text-xl font-semibold relative">
+            {user?.image ? (
+              <>
+                <input
+                  type="file"
+                  name="test"
+                  className="absolute inset-0 opacity-0 cursor-pointer z-50"
+                  onChange={handlePost}
+                />
+                <img src={`${user.image}`} alt="" className="cursor-pointer" />
+                <span className="bg-black/60 absolute inset-0 flex opacity-0 group-hover:opacity-100 justify-center items-center text-black transition-all ease-in-out 300ms">
+                  <MdOutlineEdit />
+                </span>
+              </>
+            ) : (
+              user?.name.slice(0, 1)
+            )}
           </div>
           <p className="text-md font-medium mt-1">Edit profile</p>
         </div>

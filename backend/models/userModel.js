@@ -15,6 +15,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     minLength: 6,
   },
+  image: {
+    type: String,
+    required: false,
+  },
 });
 
 export const User = await mongoose.model('users', userSchema);

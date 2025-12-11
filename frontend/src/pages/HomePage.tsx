@@ -7,7 +7,7 @@ import { useConversation } from '../store/useConversation';
 import Modal from '../components/Modal';
 import { useModel } from '../store/useModel';
 import { CiChat1 } from 'react-icons/ci';
-import { getConversation } from '../_lib/helpers';
+import { getConversation, getFriendById } from '../_lib/helpers';
 import type { UserType } from '../types';
 import { useMediaQuery } from 'usehooks-ts';
 
@@ -19,9 +19,7 @@ export default function HomePage() {
 
   const isMedium = useMediaQuery('(min-width: 640px)');
 
-  const { selectedFriend, setSelectedFriend } = useConversation(
-    (state) => state
-  );
+  const { setSelectedFriend } = useConversation((state) => state);
   const { isOpen } = useModel((state) => state);
   const navigate = useNavigate();
 
@@ -40,12 +38,14 @@ export default function HomePage() {
       async function synchronizeSelectedFriend() {
         if (!conversationId) return;
         const conversation = await getConversation(conversationId);
-        const friend = conversation?.participants?.filter(
-          (participant: UserType) => participant.id !== user?.id
+        const friendId = conversation?.participants?.filter(
+          (participantId) => participantId !== user?.id
         );
-        if (!conversation || !friend) return;
+        if (!conversation || !friendId) return;
 
-        setSelectedFriend(friend[0]);
+        const friend = await getFriendById(friendId);
+
+        setSelectedFriend(friend);
       }
 
       synchronizeSelectedFriend();
