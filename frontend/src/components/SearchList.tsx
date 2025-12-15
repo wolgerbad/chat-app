@@ -30,7 +30,7 @@ export default function SearchList({ friend }: PropTypes) {
     if (conversationExists)
       return navigate(`?conversation=${conversationExists._id}`);
 
-    const conversation = await handleNewFriend(friend.id, user.id);
+    const conversation = await handleNewFriend(friend.id, user?.id || '');
 
     navigate(`?conversation=${conversation._id}`);
     queryClient.invalidateQueries({ queryKey: ['conversations'] });

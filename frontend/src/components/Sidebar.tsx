@@ -2,11 +2,9 @@ import { useFormStatus } from 'react-dom';
 import { MdLogout, MdOutlineEdit } from 'react-icons/md';
 import {
   getConversations,
-  getFriendById,
   getSearchedUsers,
   handleImageUpdate,
   handleLogout,
-  updateUser,
 } from '../_lib/helpers';
 import { useAuth } from '../store/useAuth';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -75,9 +73,10 @@ export default function Sidebar() {
       })
     );
 
-  async function handlePost(e) {
-    const updatedUser = await handleImageUpdate(e, user);
-    setUser({ ...updatedUser, id: updatedUser._id });
+  async function handlePost(e: React.SyntheticEvent<EventTarget>) {
+    await handleImageUpdate(e, user);
+    // setUser({ ...user, image: imageUrl });
+
     queryClient.invalidateQueries({ queryKey: ['friend', user?.id] });
   }
 
@@ -93,7 +92,10 @@ export default function Sidebar() {
           />
           {user?.image ? (
             <>
-              <img src={`${user.image}`} alt="" className="cursor-pointer" />
+              <img
+                src={`http://localhost:4000/image/${user.id}`}
+                className="cursor-pointer"
+              />
               <span className="bg-black/60 absolute inset-0 flex opacity-0 group-hover:opacity-100 justify-center items-center text-black transition-all ease-in-out 300ms">
                 <MdOutlineEdit />
               </span>

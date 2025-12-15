@@ -8,7 +8,6 @@ import Modal from '../components/Modal';
 import { useModel } from '../store/useModel';
 import { CiChat1 } from 'react-icons/ci';
 import { getConversation, getFriendById } from '../_lib/helpers';
-import type { UserType } from '../types';
 import { useMediaQuery } from 'usehooks-ts';
 
 export default function HomePage() {
@@ -38,6 +37,7 @@ export default function HomePage() {
       async function synchronizeSelectedFriend() {
         if (!conversationId) return;
         const conversation = await getConversation(conversationId);
+
         const friendId = conversation?.participants?.filter(
           (participantId) => participantId !== user?.id
         );

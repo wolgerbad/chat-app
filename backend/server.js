@@ -10,28 +10,19 @@ import cors from 'cors';
 import conversationRouter from './routes/conversationRouter.js';
 import userRouter from './routes/userRouter.js';
 import messageRouter from './routes/messageRouter.js';
-import { Message } from './models/messagesModel.js';
-import { addNewMessage, getMessages } from './controllers/messageController.js';
+import { getMessages } from './controllers/messageController.js';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { User } from './models/userModel.js';
+import { messageService } from './service/messageService.js';
+import { userService } from './service/userService.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, './uploads/');
-  },
-  filename: (req, file, cb) => {
-    console.log('req,file', file);
-    console.log('test', req.file);
-    cb(null, Date.now() + file.originalname);
-  },
-});
+const storage = multer.memoryStorage();
 
 function fileFilter(req, file, cb) {
   if (file.mimetype.startsWith('image/')) {
@@ -57,19 +48,30 @@ app.use('/conversations', conversationRouter);
 app.use('/messages', messageRouter);
 app.use(authError);
 
-app.post('/upload', upload.single('test'), async (req, res, next) => {
+app.post('/upload/:userId', upload.single('test'), async (req, res, next) => {
+  const userId = req.params.userId;
   console.log('req.file', req.file);
+  console.log('userId', userId);
   console.log('reqbody', req.body);
 
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  // Return URL instead of file path
-  const imageUrl = `http://localhost:4000/uploads/${req.file.filename}`;
-  res.json({ url: imageUrl });
+  const updatedUser = await userService().updateUser(userId, {
+    contentType: req.file.mimetype,
+    image: req.file.buffer,
+  });
 
-  // const x = await User.updateOne();
+  res.send('updated');
+});
+
+app.get('/image/:id', async (req, res, next) => {
+  const id = req.params.id;
+  const user = await userService().getUser(id);
+
+  res.set('Content-Type', user.contentType);
+  res.send(user.image);
 });
 
 const server = http.createServer(app);
@@ -82,11 +84,9 @@ const io = new Server(server, {
 
 io.on('connect', async (socket) => {
   socket.on('message', async (msg) => {
-    const message = await addNewMessage(msg);
+    const message = await messageService().addNewMessage(msg);
 
-    const messages = await getMessages(message.conversationId);
-
-    socket.emit('messages', messages);
+    socket.emit('message', message);
   });
 });
 

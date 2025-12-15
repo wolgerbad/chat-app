@@ -1,13 +1,8 @@
 'use client';
 import { IoSend } from 'react-icons/io5';
 import { useConversation } from '../store/useConversation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  getConversations,
-  getFriendById,
-  getMessages,
-  updateConversation,
-} from '../_lib/helpers';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getMessages, updateConversation } from '../_lib/helpers';
 import { Link, useSearchParams } from 'react-router';
 import FriendMessage from './FriendMessage';
 import UserMessage from './UserMessage';
@@ -35,13 +30,8 @@ export default function ChatBox() {
     error,
   } = useQuery({
     queryKey: ['messages', conversationId],
-    queryFn: async () => await getMessages(conversationId),
+    queryFn: async () => await getMessages(conversationId || ''),
   });
-
-  // const { data: conversations, isPending: isConversationsPending } = useQuery({
-  //   queryKey: ['conversations'],
-  //   queryFn: async () => await getConversations(user?.id),
-  // });
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -51,14 +41,12 @@ export default function ChatBox() {
       conversationId,
     });
 
-    const updatedConversation = await updateConversation(conversationId);
-
-    queryClient.invalidateQueries({ queryKey: ['conversations'] });
-
     setClientMessage('');
-  }
 
-  // useEffect(function () {}, []);
+    queryClient.invalidateQueries({ queryKey: ['messages', conversationId] });
+    await updateConversation(conversationId);
+    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'auto' });
@@ -66,8 +54,10 @@ export default function ChatBox() {
 
   useEffect(
     function () {
-      function handleMessages(messages: MessagesType) {
-        queryClient.setQueryData(['messages', conversationId], messages);
+      function handleMessages() {
+        queryClient.invalidateQueries({
+          queryKey: ['messages', conversationId],
+        });
       }
 
       socket.on('messages', handleMessages);

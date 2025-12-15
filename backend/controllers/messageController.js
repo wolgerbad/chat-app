@@ -1,11 +1,9 @@
-import { Message } from '../models/messagesModel.js';
+import { messageService } from '../service/messageService.js';
 
-export async function getMessages(conversationId) {
-  const messages = await Message.find({ conversationId });
-  return messages;
-}
+export async function getMessages(req, res, next) {
+  const conversationId = req.params.conversationId;
 
-export async function addNewMessage(msg) {
-  const message = await Message.insertOne(msg);
-  return message;
+  const messages = await messageService().getMessages(conversationId);
+
+  res.json(messages);
 }

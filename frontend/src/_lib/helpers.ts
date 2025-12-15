@@ -1,4 +1,4 @@
-import type { ConversationType, UserType } from '../types';
+import type { UserType } from '../types';
 
 export async function handleLogin({
   email,
@@ -48,8 +48,8 @@ export async function handleSignUp({
     }
 
     return result;
-  } catch (error) {
-    return { error: error.message };
+  } catch (error: any) {
+    return { error: error?.message };
   }
 }
 
@@ -67,7 +67,9 @@ export async function handleLogout() {
 
 export async function getConversations(userId: string | undefined) {
   const res = await fetch(`http://localhost:4000/conversations/${userId}`);
+
   const data = await res.json();
+  console.log('getConversations:', data);
 
   return data;
 }
@@ -77,6 +79,8 @@ export async function getConversation(conversationId: string | null) {
     `http://localhost:4000/conversations/conversation/${conversationId}`
   );
   const data = await res.json();
+
+  console.log('getConversation:', data);
 
   return data;
 }
@@ -108,12 +112,12 @@ export async function getSearchedUsers(
   if (val.length < 1) return '';
   const res = await fetch(`http://localhost:4000/users/search/${val}`);
   const searchedUsers = await res.json();
-  const users = searchedUsers.map((user) => ({
+  const users = searchedUsers.map((user: UserType) => ({
     ...user,
     id: searchedUsers._id,
   }));
 
-  const filteredUsers = users.filter((user) => user._id !== userId);
+  const filteredUsers = users.filter((user: UserType) => user.id !== userId);
 
   return filteredUsers;
 }
@@ -131,26 +135,28 @@ export async function handleNewFriend(friendId: string, userId: string | null) {
   return newConversation;
 }
 
-export async function handleImageUpdate(e, user: UserType) {
+export async function handleImageUpdate(e: any, user: UserType | null) {
   const formData = new FormData();
   formData.append('test', e.target.files[0]);
-  const res = await fetch('http://localhost:4000/upload', {
+  const res = await fetch(`http://localhost:4000/upload/${user?.id}`, {
     method: 'POST',
     body: formData,
   });
-  const image = await res.json();
-  const updatedUser = await updateUser(user?.id, { image: image.url });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
 
-  return updatedUser;
+  console.log('imagefile', url);
+  return url;
 }
 
-export async function getFriendById(friendId) {
+export async function getFriendById(friendId: string | null) {
   const res = await fetch(`http://localhost:4000/users/${friendId}`);
   const friend = await res.json();
   return friend;
 }
 
-export async function updateConversation(conversationId) {
+export async function updateConversation(conversationId: string | null) {
+  console.log('conversation ID:', conversationId);
   const res = await fetch('http://localhost:4000/conversations/update', {
     method: 'PUT',
     body: JSON.stringify({ conversationId }),
@@ -159,6 +165,8 @@ export async function updateConversation(conversationId) {
     },
   });
   const result = await res.json();
+
+  console.log('updatedConversation:', result);
 
   return result;
 }

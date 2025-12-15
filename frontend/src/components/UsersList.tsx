@@ -5,7 +5,7 @@ import { useConversation } from '../store/useConversation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getFriendById, getMessages } from '../_lib/helpers';
 import { format } from 'date-fns';
-import type { ConversationType, UserType } from '../types';
+import type { ConversationType } from '../types';
 import { useAuth } from '../store/useAuth';
 
 type PropTypes = {
@@ -41,8 +41,6 @@ export default function UsersList({ conversation }: PropTypes) {
 
   if (isPending || isFriendLoading) return <p>Loading...</p>;
 
-  console.log('Friend', friend);
-
   const lastMessage = (messages.length && messages?.at(-1)) || '';
   const lastMessageHour =
     (messages.length && format(lastMessage?.updatedAt, 'H:mmaa')) || '';
@@ -66,7 +64,7 @@ export default function UsersList({ conversation }: PropTypes) {
       <div className="flex-1">
         <h3 className="font-semibold">{friend?.name}</h3>
         <p className="font-medium text-gray-700 text-sm">
-          {lastMessage?.message || ''}
+          {lastMessage ? `${lastMessage.message.slice(0, 20)}` : ''}
         </p>
       </div>
       <span className="font-medium text-sm text-blue-600 self-start">

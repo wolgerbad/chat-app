@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useAuth } from '../store/useAuth';
 import { handleImageUpdate, updateUser } from '../_lib/helpers';
 import { useModel } from '../store/useModel';
@@ -21,7 +21,7 @@ export default function Modal() {
     setIsOpen(false);
   }
 
-  async function handlePost(e) {
+  async function handlePost(e: ReactNode) {
     const updatedUser = await handleImageUpdate(e, user);
     setUser({ ...updatedUser, id: updatedUser._id });
 

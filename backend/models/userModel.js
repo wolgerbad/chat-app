@@ -19,6 +19,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  contentType: {
+    type: String,
+    required: false,
+  },
 });
 
 export const User = await mongoose.model('users', userSchema);

@@ -29,7 +29,7 @@ export type MessagesType = [MessageType];
 
 export type ConversationType = {
   _id: string;
-  participants: [UserType];
+  participants: [string];
 };
 
 export type AuthType = {
