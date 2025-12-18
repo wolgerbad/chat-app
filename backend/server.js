@@ -16,6 +16,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { messageService } from './service/messageService.js';
 import { userService } from './service/userService.js';
+import {
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -23,6 +31,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const storage = multer.memoryStorage();
+
+const bucketName = process.env.BUCKET_NAME;
+const region = process.env.BUCKET_REGION;
+
+const s3Client = new S3Client({
+  region,
+});
 
 function fileFilter(req, file, cb) {
   if (file.mimetype.startsWith('image/')) {
@@ -49,6 +64,9 @@ app.use('/messages', messageRouter);
 app.use(authError);
 
 app.post('/upload/:userId', upload.single('test'), async (req, res, next) => {
+  const randomImageName = (bytes = 32) =>
+    crypto.randomBytes(bytes).toString('hex');
+
   const userId = req.params.userId;
   console.log('req.file', req.file);
   console.log('userId', userId);
@@ -58,20 +76,53 @@ app.post('/upload/:userId', upload.single('test'), async (req, res, next) => {
     return res.status(400).json({ error: 'No file uploaded' });
   }
 
-  const updatedUser = await userService().updateUser(userId, {
-    contentType: req.file.mimetype,
-    image: req.file.buffer,
+  const randomImg = randomImageName();
+
+  const params = {
+    Bucket: bucketName,
+    Key: randomImg,
+    Body: req.file.buffer,
+    ContentType: req.file.mimetype,
+  };
+
+  const command = new PutObjectCommand(params);
+
+  await s3Client.send(command);
+
+  const getCommand = new GetObjectCommand({
+    Bucket: bucketName,
+    Key: randomImg,
   });
 
-  res.send('updated');
+  const imageUrl = await getSignedUrl(s3Client, getCommand, {
+    expiresIn: 3600,
+  });
+
+  const updatedUser = await userService().updateUser(userId, {
+    image: imageUrl,
+  });
+
+  res.json(imageUrl);
 });
 
 app.get('/image/:id', async (req, res, next) => {
   const id = req.params.id;
   const user = await userService().getUser(id);
 
-  res.set('Content-Type', user.contentType);
-  res.send(user.image);
+  const command = new GetObjectCommand({
+    Bucket: bucketName,
+    Key: user.image,
+  });
+
+  const imageUrl = await getSignedUrl(s3Client, command, {
+    expiresIn: 3600,
+  });
+
+  const updatedUser = await userService().updateUser(user.id, {
+    image: imageUrl,
+  });
+
+  res.send('updated');
 });
 
 const server = http.createServer(app);

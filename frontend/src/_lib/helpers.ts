@@ -142,11 +142,9 @@ export async function handleImageUpdate(e: any, user: UserType | null) {
     method: 'POST',
     body: formData,
   });
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
 
-  console.log('imagefile', url);
-  return url;
+  const data = res.json();
+  return data;
 }
 
 export async function getFriendById(friendId: string | null) {

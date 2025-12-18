@@ -74,9 +74,14 @@ export default function Sidebar() {
     );
 
   async function handlePost(e: React.SyntheticEvent<EventTarget>) {
-    await handleImageUpdate(e, user);
-    // setUser({ ...user, image: imageUrl });
+    const promptVal = prompt(
+      'You sure you want to change the image? (If yes, write yes)',
+      ''
+    );
+    if (promptVal?.trim() !== 'yes') return;
+    const imageUrl = await handleImageUpdate(e, user);
 
+    setUser({ ...user, image: imageUrl });
     queryClient.invalidateQueries({ queryKey: ['friend', user?.id] });
   }
 
@@ -92,10 +97,7 @@ export default function Sidebar() {
           />
           {user?.image ? (
             <>
-              <img
-                src={`http://localhost:4000/image/${user.id}`}
-                className="cursor-pointer"
-              />
+              <img src={user.image} className="cursor-pointer" />
               <span className="bg-black/60 absolute inset-0 flex opacity-0 group-hover:opacity-100 justify-center items-center text-black transition-all ease-in-out 300ms">
                 <MdOutlineEdit />
               </span>
